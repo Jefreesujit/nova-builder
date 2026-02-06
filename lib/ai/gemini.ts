@@ -141,8 +141,18 @@ export async function streamAppCode(
 
     return result;
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini Generation Error:", error);
-    throw new Error("Failed to generate code. Please try again.");
+
+    const errorMessage = error?.message?.toLowerCase() || "";
+    if (errorMessage.includes("429") || errorMessage.includes("too many requests") || errorMessage.includes("rate limit")) {
+      throw new Error("RATE_LIMIT_REACHED");
+    }
+
+    if (errorMessage.includes("safety") || errorMessage.includes("blocked")) {
+      throw new Error("SAFETY_BLOCK");
+    }
+
+    throw new Error(error.message || "Failed to generate code. Please try again.");
   }
 }

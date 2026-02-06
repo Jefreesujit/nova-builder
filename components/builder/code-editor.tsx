@@ -1,7 +1,10 @@
-"use client";
-
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Copy, Check, WrapText } from "lucide-react";
+import Prism from "prismjs";
+import "prismjs/themes/prism-tomorrow.css";
+import "prismjs/components/prism-markup"; // HTML/XML
+import "prismjs/components/prism-css";
+import "prismjs/components/prism-javascript";
 
 interface CodeEditorProps {
   code: string;
@@ -12,6 +15,21 @@ interface CodeEditorProps {
 export function CodeEditor({ code, onChange, readOnly = true }: CodeEditorProps) {
   const [copied, setCopied] = useState(false);
   const [wordWrap, setWordWrap] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const codeRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (codeRef.current) {
+      Prism.highlightElement(codeRef.current);
+    }
+  }, [code]);
+
+  // Auto-scroll to bottom as code grows
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
+  }, [code]);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(code);
@@ -19,10 +37,8 @@ export function CodeEditor({ code, onChange, readOnly = true }: CodeEditorProps)
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const lines = code.split("\n");
-
   return (
-    <div className="h-full flex flex-col bg-card rounded-xl border border-border overflow-hidden">
+    <div className="h-full flex flex-col bg-[#1d1f21] rounded-xl border border-border overflow-hidden">
       {/* Toolbar */}
       <div className="h-10 bg-card border-b border-border flex items-center justify-between px-3">
         <span className="text-xs text-muted">index.html</span>
@@ -30,8 +46,8 @@ export function CodeEditor({ code, onChange, readOnly = true }: CodeEditorProps)
           <button
             onClick={() => setWordWrap(!wordWrap)}
             className={`p-1.5 rounded transition-colors ${wordWrap
-                ? "text-primary bg-primary/10"
-                : "text-muted hover:text-foreground"
+              ? "text-primary bg-primary/10"
+              : "text-muted hover:text-foreground"
               }`}
             title="Toggle word wrap"
           >
@@ -52,36 +68,19 @@ export function CodeEditor({ code, onChange, readOnly = true }: CodeEditorProps)
       </div>
 
       {/* Code Content */}
-      <div className="flex-1 overflow-auto font-mono text-sm">
-        <div className="flex min-h-full">
-          {/* Line Numbers */}
-          <div className="sticky left-0 bg-card border-r border-border px-3 py-3 text-right text-muted select-none">
-            {lines.map((_, i) => (
-              <div key={i} className="leading-6">
-                {i + 1}
-              </div>
-            ))}
-          </div>
-
-          {/* Code */}
-          <div className="flex-1 p-3">
-            {readOnly ? (
-              <pre
-                className={`leading-6 ${wordWrap ? "whitespace-pre-wrap break-words" : "whitespace-pre"
-                  }`}
-              >
-                <code>{code}</code>
-              </pre>
-            ) : (
-              <textarea
-                value={code}
-                onChange={(e) => onChange?.(e.target.value)}
-                className={`w-full h-full bg-transparent resize-none outline-none leading-6 ${wordWrap ? "whitespace-pre-wrap break-words" : "whitespace-pre"
-                  }`}
-                spellCheck={false}
-              />
-            )}
-          </div>
+      <div
+        ref={containerRef}
+        className="flex-1 overflow-auto font-mono text-sm custom-scrollbar bg-[#1d1f21]"
+      >
+        <div className="p-4 min-h-full">
+          <pre
+            className={`language-html !bg-transparent !m-0 !p-0 ${wordWrap ? "!whitespace-pre-wrap !break-words" : "!whitespace-pre"
+              }`}
+          >
+            <code ref={codeRef} className="language-html">
+              {code}
+            </code>
+          </pre>
         </div>
       </div>
     </div>

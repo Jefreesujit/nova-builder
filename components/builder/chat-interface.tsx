@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Send, Loader2, Paperclip, X, FileText, Image as ImageIcon } from "lucide-react";
 import type { Message, Attachment } from "@/lib/types/database";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface ChatInterfaceProps {
   messages: Message[];
@@ -82,7 +84,7 @@ export function ChatInterface({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full border-r border-border">
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
@@ -104,11 +106,25 @@ export function ChatInterface({
             >
               <div
                 className={`max-w-[85%] rounded-2xl px-4 py-3 ${msg.role === "user"
-                    ? "bg-primary text-primary-foreground rounded-br-md"
-                    : "bg-card text-card-foreground rounded-bl-md"
+                  ? "bg-primary text-primary-foreground rounded-br-md"
+                  : "bg-card text-card-foreground rounded-bl-md"
                   }`}
               >
-                <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                <div className="text-sm markdown-content">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed whitespace-pre-wrap">{children}</p>,
+                      ul: ({ children }) => <ul className="list-disc pl-4 mb-2">{children}</ul>,
+                      ol: ({ children }) => <ol className="list-decimal pl-4 mb-2">{children}</ol>,
+                      li: ({ children }) => <li className="mb-1">{children}</li>,
+                      code: ({ children }) => <code className="bg-black/20 rounded px-1 py-0.5 font-mono text-[11px]">{children}</code>,
+                      strong: ({ children }) => <span className="font-bold text-accent">{children}</span>,
+                    }}
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
+                </div>
                 {msg.attachments && msg.attachments.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-1">
                     {msg.attachments.map((att, i) => (
@@ -141,7 +157,7 @@ export function ChatInterface({
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-border">
+      <div className="p-4 border-t border-border bg-card/30">
         {/* Attachments Preview */}
         {attachments.length > 0 && (
           <div className="mb-3 flex flex-wrap gap-2">

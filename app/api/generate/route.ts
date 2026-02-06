@@ -75,11 +75,26 @@ export async function POST(request: NextRequest) {
       },
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Generate API error:", error);
+
+    const message = error.message;
+    let status = 500;
+    let userMessage = "Failed to generate code";
+
+    if (message === "RATE_LIMIT_REACHED") {
+      status = 429;
+      userMessage = "Rate limit reached. please wait a minute before trying again.";
+    } else if (message === "SAFETY_BLOCK") {
+      status = 400;
+      userMessage = "Your request was blocked by AI safety filters. Please try a different prompt.";
+    } else if (message) {
+      userMessage = message;
+    }
+
     return NextResponse.json(
-      { error: "Failed to generate code" },
-      { status: 500 }
+      { error: userMessage },
+      { status }
     );
   }
 }

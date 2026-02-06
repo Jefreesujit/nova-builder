@@ -10,6 +10,7 @@ import { addMessage } from "@/lib/actions/messages";
 import { updateProject, publishProject } from "@/lib/actions/projects";
 import type { Project, Message, Attachment } from "@/lib/types/database";
 import { generateAppCode } from "@/services/geminiService";
+import JSZip from "jszip";
 
 interface WorkspaceClientProps {
   project: Project;
@@ -29,6 +30,7 @@ export function WorkspaceClient({
   const [isLoading, setIsLoading] = useState(false);
   const [viewMode, setViewMode] = useState<"preview" | "code">("preview");
   const [showDeployDialog, setShowDeployDialog] = useState(false);
+  const [generationSummary, setGenerationSummary] = useState("");
 
   const hasInitialized = useRef(false);
 
@@ -56,6 +58,7 @@ export function WorkspaceClient({
     };
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
+    setViewMode("code"); // Code tab priority during generation
 
     try {
       // Save user message to DB
@@ -79,7 +82,6 @@ export function WorkspaceClient({
         created_at: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, initialAiMessage]);
-      setViewMode("preview");
 
       for await (const update of generator) {
         if (update.code) {
@@ -89,6 +91,7 @@ export function WorkspaceClient({
 
         if (update.summary) {
           finalSummary = update.summary;
+          setGenerationSummary(finalSummary);
           // Update the specific AI message in state
           setMessages((prev) =>
             prev.map((msg) =>
@@ -101,6 +104,9 @@ export function WorkspaceClient({
           finalProjectName = update.projectName;
         }
       }
+
+      // Automatically switch to preview when finished
+      setViewMode("preview");
 
       // Save AI message to DB (final summary)
       await addMessage(project.id, "model", finalSummary);
@@ -116,32 +122,65 @@ export function WorkspaceClient({
         },
         name: finalProjectName,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating code:", error);
-      const errorMessage: Message = {
+      let userFriendlyMessage = "Sorry, I encountered an error. Please try again.";
+
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      if (errorMessage.toLowerCase().includes("rate limit")) {
+        userFriendlyMessage = "🚨 Rate limit reached! The Gemini API is currently busy. Please wait about 60 seconds and try your request again.";
+      } else if (errorMessage.toLowerCase().includes("safety") || errorMessage.toLowerCase().includes("blocked")) {
+        userFriendlyMessage = "🛡️ Your request was blocked by safety filters. Try rephrasing your prompt to be more specific and standard.";
+      } else if (errorMessage) {
+        userFriendlyMessage = `Error: ${errorMessage}`;
+      }
+
+      const errorMessageObj: Message = {
         id: crypto.randomUUID(),
         project_id: project.id,
         role: "model",
-        content: error instanceof Error ? `Error: ${error.message}` : "Sorry, I encountered an error. Please try again.",
+        content: userFriendlyMessage,
         attachments: [],
         created_at: new Date().toISOString(),
       };
-      setMessages((prev) => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, errorMessageObj]);
     } finally {
       setIsLoading(false);
+      setGenerationSummary("");
     }
   };
 
-  const handleDownload = () => {
-    const blob = new Blob([generatedCode], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "index.html";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const handleDownload = async () => {
+    const zip = new JSZip();
+    // Explicitly name the file "index.html" to avoid "index 2.html"
+    zip.file("index.html", generatedCode);
+
+    try {
+      const content = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(content);
+      const fileName = project.name ? `${project.name.replace(/\s+/g, '-').toLowerCase()}.zip` : "nova-app.zip";
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Zip generation failed:", err);
+      // Fallback to direct html download
+      const blob = new Blob([generatedCode], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "index.html";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
   };
 
   const handlePublish = async (subdomain: string) => {
@@ -149,9 +188,9 @@ export function WorkspaceClient({
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex">
+    <div className="h-[calc(100vh-4rem)] flex overflow-hidden bg-background">
       {/* Chat Panel */}
-      <div className="w-full md:w-[400px] lg:w-[450px] flex-shrink-0 border-r border-border">
+      <div className="w-full md:w-[400px] lg:w-[450px] flex-shrink-0 bg-background flex flex-col h-full">
         <ChatInterface
           messages={messages}
           isLoading={isLoading}
@@ -160,15 +199,15 @@ export function WorkspaceClient({
       </div>
 
       {/* Workspace Panel */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-background">
         {/* Toolbar */}
-        <div className="h-12 border-b border-border flex items-center justify-between px-4 bg-card">
-          <div className="flex bg-background rounded-lg p-1">
+        <div className="h-12 border-b border-border flex items-center justify-between px-4 bg-card/50 backdrop-blur-sm shadow-sm z-10">
+          <div className="flex bg-background/50 rounded-lg p-1 border border-border/50">
             <button
               onClick={() => setViewMode("preview")}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${viewMode === "preview"
                 ? "bg-card text-foreground shadow-sm"
-                : "text-muted hover:text-foreground"
+                : "text-muted hover:text-foreground hover:bg-card/30"
                 }`}
             >
               <Eye size={14} />
@@ -178,7 +217,7 @@ export function WorkspaceClient({
               onClick={() => setViewMode("code")}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${viewMode === "code"
                 ? "bg-card text-foreground shadow-sm"
-                : "text-muted hover:text-foreground"
+                : "text-muted hover:text-foreground hover:bg-card/30"
                 }`}
             >
               <Code size={14} />
@@ -189,14 +228,14 @@ export function WorkspaceClient({
           <div className="flex items-center gap-2">
             <button
               onClick={handleDownload}
-              className="p-2 text-muted hover:text-foreground hover:bg-background rounded-lg transition-colors"
-              title="Download code"
+              className="p-2 text-muted hover:text-foreground hover:bg-card/50 bg-background/50 border border-border/50 rounded-lg transition-colors"
+              title="Download code as ZIP"
             >
               <Download size={16} />
             </button>
             <button
               onClick={() => setShowDeployDialog(true)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-accent text-white text-xs font-medium rounded-lg hover:bg-accent/90 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 bg-accent text-white text-xs font-medium rounded-lg hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20"
             >
               <Rocket size={14} />
               Deploy
@@ -204,16 +243,21 @@ export function WorkspaceClient({
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 p-4 overflow-hidden">
+        {/* Content Area */}
+        <div className="flex-1 relative overflow-hidden bg-background">
           {viewMode === "preview" ? (
             <PreviewFrame
               code={generatedCode}
               isLoading={isLoading}
               refreshKey={messages.length}
+              status={generationSummary}
             />
           ) : (
-            <CodeEditor code={generatedCode} />
+            <div className="h-full p-4 flex flex-col">
+              <div className="flex-1 rounded-xl border border-border bg-card overflow-hidden shadow-sm">
+                <CodeEditor code={generatedCode} />
+              </div>
+            </div>
           )}
         </div>
       </div>

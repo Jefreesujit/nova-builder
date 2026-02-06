@@ -1,4 +1,4 @@
-import type { Message, Attachment } from '../types';
+import type { Message, Attachment } from '@/lib/types/database';
 
 export interface GenerateResult {
   code: string;
@@ -21,10 +21,15 @@ export const generateAppCode = async function* (
     });
 
     if (!response.ok) {
-      let err = `Server error ${response.status}`;
-      try { err = await response.text(); } catch { }
-      console.error("[GeminiService] API Error:", err);
-      throw new Error(err);
+      let errMessage = `Server error ${response.status}`;
+      try {
+        const errJson = await response.json();
+        errMessage = errJson.error || errMessage;
+      } catch {
+        try { errMessage = await response.text(); } catch { }
+      }
+      console.error("[GeminiService] API Error:", errMessage);
+      throw new Error(errMessage);
     }
 
     const reader = response.body?.getReader();
