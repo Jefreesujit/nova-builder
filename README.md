@@ -1,15 +1,15 @@
 # NovaBuilder
 ### An Open-Source AI Site Builder & Hosting Platform
 
-[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/jefree/nova-builder)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/Jefreesujit/nova-builder)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![Stack: Next.js 15](https://img.shields.io/badge/Stack-Next.js%2015-black.svg)](https://nextjs.org/)
+[![Stack: Next.js 16](https://img.shields.io/badge/Stack-Next.js%2016-black.svg)](https://nextjs.org/)
 [![Database: Supabase](https://img.shields.io/badge/Database-Supabase-3ECF8E.svg)](https://supabase.com/)
-[![AI: Gemini 2.0 Flash](https://img.shields.io/badge/AI-Gemini%202.0%20Flash-orange.svg)](https://aistudio.google.com/)
+[![AI: Gemini 2.0](https://img.shields.io/badge/AI-Gemini%202.0-orange.svg)](https://aistudio.google.com/)
 
 **NovaBuilder** is a comprehensive, open-source platform for generating and hosting AI-powered web applications. It serves as a single-repo solution for both building sites and serving them via custom subdomains.
 
-[Implementation Plan](./docs/plans/IMPLEMENTATION_PLAN.md) • [Getting Started](#getting-started) • [Architecture](#architecture)
+[Implementation Plan](./docs/plans/IMPLEMENTATION_PLAN.md) • [Contributing](./CONTRIBUTING.md) • [Code of Conduct](./CODE_OF_CONDUCT.md) • [Getting Started](#getting-started) • [Architecture](#architecture)
 </div>
 
 ---
@@ -20,7 +20,7 @@ NovaBuilder has evolved from a simple Vite app into a robust Next.js application
 
 - **The Builder (`app.novabuilder.com`):** The primary interface for users to prompt, iterate, and manage their AI projects.
 - **The Sites (`*.novabuilder.app`):** User projects are served dynamically via **Next.js Middleware Rewrites**, providing a seamless "published" experience without external hosting fees.
-- **The Engine:** Powered by **Gemini 2.0 Flash** for high-speed, context-aware code generation.
+- **The Engine:** Powered by **Gemini 3.0 Models** for high-speed, context-aware code generation.
 
 ## ✨ Features
 
@@ -33,9 +33,9 @@ NovaBuilder has evolved from a simple Vite app into a robust Next.js application
 
 ## 🛠️ Tech Stack
 
-- **Framework:** [Next.js 15](https://nextjs.org/) (App Router)
+- **Framework:** [Next.js 16](https://nextjs.org/) (App Router)
 - **Database:** [Supabase](https://supabase.com/) (Postgres + SSR)
-- **AI Engine:** [Google Gemini 2.0 Flash](https://aistudio.google.com/)
+- **AI Engine:** [Google Gemini 2.0](https://aistudio.google.com/)
 - **State Management:** [Zustand](https://github.com/pmndrs/zustand)
 - **Styling:** [Tailwind CSS 4](https://tailwindcss.com/)
 - **Authentication:** [Auth.js (NextAuth)](https://authjs.dev/)
@@ -52,7 +52,7 @@ NovaBuilder has evolved from a simple Vite app into a robust Next.js application
 
 1. **Clone and Install:**
    ```bash
-   git clone https://github.com/jefree/nova-builder.git
+   git clone https://github.com/jefreesujit/nova-builder.git
    cd nova-builder
    npm install
    ```

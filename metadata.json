@@ -1,5 +1,22 @@
 {
   "name": "NovaBuilder",
-  "description": "A powerful AI-driven landing page and app generator. Chat with AI to build, preview, and deploy React/HTML applications instantly.",
-  "requestFramePermissions": []
+  "version": "1.0.0",
+  "description": "A powerful open-source AI-driven application generator. Build, preview, and deploy React/HTML applications instantly through natural language conversation.",
+  "author": "Jefree Sujit",
+  "license": "MIT",
+  "homepage": "https://novabuilder.app",
+  "repository": "https://github.com/Jefreesujit/nova-builder",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ],
+  "keywords": [
+    "ai",
+    "nextjs",
+    "low-code",
+    "no-code",
+    "gemini",
+    "application-builder"
+  ]
 }

@@ -1,7 +1,24 @@
 {
   "name": "novabuilder",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
+  "description": "Open-source AI-powered application builder.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jefreesujit/nova-builder.git"
+  },
+  "keywords": [
+    "ai",
+    "nextjs",
+    "app-builder",
+    "gemini",
+    "vfs"
+  ],
+  "author": "Jefree Sujit",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Jefreesujit/nova-builder/issues"
+  },
+  "homepage": "https://github.com/Jefreesujit/nova-builder#readme",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

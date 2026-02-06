@@ -11,6 +11,7 @@ import {
   Rocket,
   Menu,
   X,
+  Settings,
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -109,23 +110,25 @@ export function Header({
               </button>
 
               {/* Profile Dropdown */}
-              <div className="absolute right-0 mt-2 w-48 bg-background border border-border rounded-lg shadow-xl overflow-hidden hidden group-hover:block hover:block">
-                <div className="px-4 py-3 border-b border-border">
-                  <p className="text-sm font-medium text-foreground truncate">{session.user.name}</p>
-                  <p className="text-xs text-muted truncate">{session.user.email}</p>
-                </div>
-                <div className="py-1">
-                  <Link href="/settings" className="flex items-center gap-2 px-4 py-2 text-sm text-muted hover:text-foreground hover:bg-card transition-colors">
-                    <span className="w-4 h-4" /> {/* Placeholder for icon if needed */}
-                    Settings
-                  </Link>
-                  <button
-                    onClick={() => signOut()}
-                    className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-card transition-colors"
-                  >
-                    <LogOut size={14} />
-                    Sign Out
-                  </button>
+              <div className={`absolute right-0 top-full pt-2 w-48 z-50 ${profileMenuOpen ? 'block' : 'hidden group-hover:block hover:block'}`}>
+                <div className="bg-background border border-border rounded-lg shadow-xl overflow-hidden">
+                  <div className="px-4 py-3 border-b border-border">
+                    <p className="text-sm font-medium text-foreground truncate">{session.user.name}</p>
+                    <p className="text-xs text-muted truncate">{session.user.email}</p>
+                  </div>
+                  <div className="py-1">
+                    <Link href="/settings" className="flex items-center gap-2 px-4 py-2 text-sm text-muted hover:text-foreground hover:bg-card transition-colors">
+                      <Settings size={14} />
+                      Settings
+                    </Link>
+                    <button
+                      onClick={() => signOut()}
+                      className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-card transition-colors"
+                    >
+                      <LogOut size={14} />
+                      Sign Out
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
