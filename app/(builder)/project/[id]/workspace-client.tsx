@@ -27,6 +27,12 @@ export function WorkspaceClient({
   const [generatedCode, setGeneratedCode] = useState(
     project.files?.["index.html"]?.content || ""
   );
+  const [previewCode, setPreviewCode] = useState(
+    project.files?.["index.html"]?.content || ""
+  );
+  // Track previous code for diff view during generation
+  const [previousCode, setPreviousCode] = useState<string | undefined>(undefined);
+
   const [isLoading, setIsLoading] = useState(false);
   const [viewMode, setViewMode] = useState<"preview" | "code">("preview");
   const [showDeployDialog, setShowDeployDialog] = useState(false);
@@ -57,8 +63,15 @@ export function WorkspaceClient({
       created_at: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, userMessage]);
+
+    // Setup generation state
     setIsLoading(true);
-    setViewMode("code"); // Code tab priority during generation
+    // Removed forceful tab switch to "code" at start
+
+    // If we have existing code, snapshot it as 'previous' to enable Diff View
+    if (generatedCode && generatedCode.trim().length > 0) {
+      setPreviousCode(generatedCode);
+    }
 
     try {
       // Save user message to DB
@@ -105,8 +118,13 @@ export function WorkspaceClient({
         }
       }
 
-      // Automatically switch to preview when finished
-      setViewMode("preview");
+      // Automatically switch to preview when finished if the user was watching the code
+      if (viewMode === "code") {
+        setViewMode("preview");
+      }
+
+      // Update preview code only after generation is complete
+      setPreviewCode(finalCode);
 
       // Save AI message to DB (final summary)
       await addMessage(project.id, "model", finalSummary);
@@ -148,6 +166,8 @@ export function WorkspaceClient({
     } finally {
       setIsLoading(false);
       setGenerationSummary("");
+      // Clear previous code to exit Diff View
+      setPreviousCode(undefined);
     }
   };
 
@@ -228,10 +248,11 @@ export function WorkspaceClient({
           <div className="flex items-center gap-2">
             <button
               onClick={handleDownload}
-              className="p-2 text-muted hover:text-foreground hover:bg-card/50 bg-background/50 border border-border/50 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 text-muted hover:text-foreground hover:bg-card/50 bg-background/50 border border-border/50 rounded-lg transition-colors"
               title="Download code as ZIP"
             >
               <Download size={16} />
+              <span className="text-xs font-medium">Download Code</span>
             </button>
             <button
               onClick={() => setShowDeployDialog(true)}
@@ -247,7 +268,7 @@ export function WorkspaceClient({
         <div className="flex-1 relative overflow-hidden bg-background">
           {viewMode === "preview" ? (
             <PreviewFrame
-              code={generatedCode}
+              code={previewCode}
               isLoading={isLoading}
               refreshKey={messages.length}
               status={generationSummary}
@@ -255,7 +276,10 @@ export function WorkspaceClient({
           ) : (
             <div className="h-full p-4 flex flex-col">
               <div className="flex-1 rounded-xl border border-border bg-card overflow-hidden shadow-sm">
-                <CodeEditor code={generatedCode} />
+                <CodeEditor
+                  code={generatedCode}
+                  originalCode={previousCode}
+                />
               </div>
             </div>
           )}

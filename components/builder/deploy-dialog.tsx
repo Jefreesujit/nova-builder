@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X, Download, Rocket, Globe, Copy, Check, AlertCircle } from "lucide-react";
+import JSZip from "jszip";
 
 interface DeployDialogProps {
   isOpen: boolean;
@@ -27,16 +28,23 @@ export function DeployDialog({
 
   if (!isOpen) return null;
 
-  const handleDownload = () => {
-    const blob = new Blob([generatedCode], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "index.html";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const handleDownload = async () => {
+    const zip = new JSZip();
+    zip.file("index.html", generatedCode);
+
+    try {
+      const content = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(content);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "nova-code.zip";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Zip generation failed:", err);
+    }
   };
 
   const handlePublish = async () => {
@@ -88,13 +96,13 @@ export function DeployDialog({
               <div className="flex-1">
                 <h3 className="font-medium mb-1">Download Code</h3>
                 <p className="text-sm text-muted mb-3">
-                  Get the complete HTML file to host anywhere.
+                  Get the complete project as a ZIP file to host anywhere.
                 </p>
                 <button
                   onClick={handleDownload}
                   className="px-4 py-2 bg-border text-foreground text-sm font-medium rounded-lg hover:bg-border/80 transition-colors"
                 >
-                  Download index.html
+                  Download Code
                 </button>
               </div>
             </div>
