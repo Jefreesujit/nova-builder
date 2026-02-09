@@ -18,11 +18,13 @@ export async function POST(request: NextRequest) {
       history,
       currentCode,
       attachments,
+      model,
     }: {
       prompt: string;
       history: Message[];
       currentCode: string;
       attachments?: Attachment[];
+      model?: string;
     } = body;
 
     if (!prompt) {
@@ -34,7 +36,8 @@ export async function POST(request: NextRequest) {
       prompt,
       history || [],
       currentCode || "",
-      attachments || []
+      attachments || [],
+      model
     );
 
     // Create a ReadableStream to pipe the data to the client

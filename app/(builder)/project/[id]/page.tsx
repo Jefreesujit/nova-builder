@@ -5,7 +5,7 @@ import { WorkspaceClient } from "./workspace-client";
 
 interface WorkspacePageProps {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ prompt?: string }>;
+  searchParams: Promise<{ prompt?: string; model?: string }>;
 }
 
 export default async function WorkspacePage({
@@ -13,7 +13,7 @@ export default async function WorkspacePage({
   searchParams,
 }: WorkspacePageProps) {
   const { id } = await params;
-  const { prompt } = await searchParams;
+  const { prompt, model } = await searchParams;
 
   const project = await getProject(id);
 
@@ -28,6 +28,7 @@ export default async function WorkspacePage({
       project={project}
       initialMessages={messages}
       initialPrompt={prompt}
+      initialModel={model}
     />
   );
 }

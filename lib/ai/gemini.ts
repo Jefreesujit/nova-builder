@@ -40,10 +40,11 @@ export async function streamAppCode(
   prompt: string,
   history: Message[],
   currentCode: string,
-  attachments: Attachment[] = []
+  attachments: Attachment[] = [],
+  modelId?: string
 ) {
   try {
-    const model = "gemini-3-flash-preview";
+    const model = modelId || "gemini-3-flash-preview";
 
     // Construct a context-aware prompt
     let contextPrompt = `

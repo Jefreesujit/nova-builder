@@ -10,14 +10,15 @@ export const generateAppCode = async function* (
   prompt: string,
   history: Message[],
   currentCode: string,
-  attachments: Attachment[] = []
+  attachments: Attachment[] = [],
+  model?: string
 ): AsyncGenerator<GenerateResult, void, unknown> {
   try {
     console.log("[GeminiService] Fetching /api/generate...");
     const response = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, history, currentCode, attachments }),
+      body: JSON.stringify({ prompt, history, currentCode, attachments, model }),
     });
 
     if (!response.ok) {

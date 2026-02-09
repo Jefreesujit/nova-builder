@@ -16,12 +16,14 @@ interface WorkspaceClientProps {
   project: Project;
   initialMessages: Message[];
   initialPrompt?: string;
+  initialModel?: string;
 }
 
 export function WorkspaceClient({
   project,
   initialMessages,
   initialPrompt,
+  initialModel,
 }: WorkspaceClientProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [generatedCode, setGeneratedCode] = useState(
@@ -44,14 +46,15 @@ export function WorkspaceClient({
   useEffect(() => {
     if (initialPrompt && messages.length === 0 && !hasInitialized.current) {
       hasInitialized.current = true;
-      handleSendMessage(initialPrompt);
+      handleSendMessage(initialPrompt, [], initialModel);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSendMessage = async (
     text: string,
-    attachments: Attachment[] = []
+    attachments: Attachment[] = [],
+    model?: string
   ) => {
     // Add user message to UI
     const userMessage: Message = {
@@ -78,7 +81,7 @@ export function WorkspaceClient({
       await addMessage(project.id, "user", text, attachments);
 
       // Call Gemini Service (Streaming)
-      const generator = generateAppCode(text, messages, generatedCode, attachments);
+      const generator = generateAppCode(text, messages, generatedCode, attachments, model);
 
       let finalCode = generatedCode;
       let finalSummary = "";
