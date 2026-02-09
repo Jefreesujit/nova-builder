@@ -199,3 +199,19 @@ export async function getPublishedProject(subdomain: string): Promise<Project | 
 
   return data;
 }
+export async function getPublicProjects(): Promise<Project[]> {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("is_published", true)
+    .limit(10)
+    .order("updated_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching public projects:", error);
+    return [];
+  }
+
+  return data || [];
+}

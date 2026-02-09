@@ -10,7 +10,7 @@ export default function SettingsPage() {
             <label className="block text-sm font-medium text-muted mb-1">Display Name</label>
             <input
               type="text"
-              className="w-full bg-background border border-border rounded-lg px-3 py-2 text-foreground focus:ring-2 focus:ring-primary focus:outline-none"
+              className="w-full bg-background border border-border rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary/50 transition-colors"
               placeholder="Your Name"
               disabled
             />
@@ -21,7 +21,7 @@ export default function SettingsPage() {
             <label className="block text-sm font-medium text-muted mb-1">Email</label>
             <input
               type="email"
-              className="w-full bg-background border border-border rounded-lg px-3 py-2 text-foreground focus:ring-2 focus:ring-primary focus:outline-none opacity-60"
+              className="w-full bg-background border border-border rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary/50 transition-colors opacity-60"
               placeholder="email@example.com"
               disabled
             />

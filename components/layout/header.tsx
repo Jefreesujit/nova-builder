@@ -12,6 +12,7 @@ import {
   Menu,
   X,
   Settings,
+  Github,
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -50,15 +51,13 @@ export function Header({
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-4">
-          {!isLanding && (
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-2 px-3 py-2 text-sm text-muted hover:text-foreground transition-colors rounded-lg hover:bg-card"
-            >
-              <Home size={16} />
-              Projects
-            </Link>
-          )}
+          <Link
+            href={isLanding ? "#projects" : "/#projects"}
+            className="flex items-center gap-2 px-3 py-2 text-sm text-muted hover:text-foreground transition-colors rounded-lg hover:bg-card"
+          >
+            <Home size={16} />
+            Projects
+          </Link>
 
           {onDeploy && (
             <button
@@ -84,6 +83,16 @@ export function Header({
               {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             </button>
           )}
+
+          <a
+            href="https://github.com/JefreeSujit/nova-builder"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2 text-muted hover:text-foreground hover:bg-card rounded-lg transition-colors"
+            title="View on GitHub"
+          >
+            <Github size={20} />
+          </a>
 
           {/* Auth */}
           {status === "loading" ? (
@@ -155,16 +164,14 @@ export function Header({
       {mobileMenuOpen && (
         <div className="md:hidden absolute top-16 left-0 right-0 bg-background border-b border-border p-4 animate-fade-in">
           <div className="flex flex-col gap-3">
-            {!isLanding && (
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-2 px-3 py-2 text-sm text-muted hover:text-foreground transition-colors rounded-lg hover:bg-card"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Home size={16} />
-                Dashboard
-              </Link>
-            )}
+            <Link
+              href={isLanding ? "#projects" : "/#projects"}
+              className="flex items-center gap-2 px-3 py-2 text-sm text-muted hover:text-foreground transition-colors rounded-lg hover:bg-card"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <Home size={16} />
+              Projects
+            </Link>
             {session?.user ? (
               <button
                 onClick={() => signOut()}

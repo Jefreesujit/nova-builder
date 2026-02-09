@@ -88,7 +88,7 @@ export function CodeEditor({ code, originalCode, onChange, readOnly = true }: Co
       {/* Code Content */}
       <div
         ref={containerRef}
-        className="flex-1 overflow-auto font-mono text-sm custom-scrollbar bg-[#1d1f21]"
+        className="flex-1 overflow-auto font-mono text-sm custom-scrollbar bg-[#1d1f21] outline-none"
       >
         {showDiff && originalCode ? (
           <div className="h-full relative">
@@ -100,10 +100,10 @@ export function CodeEditor({ code, originalCode, onChange, readOnly = true }: Co
         ) : (
           <div className="p-4 min-h-full">
             <pre
-              className={`language-html !bg-transparent !m-0 !p-0 ${wordWrap ? "!whitespace-pre-wrap !break-words" : "!whitespace-pre"
+              className={`language-html !bg-transparent !m-0 !p-0 outline-none !outline-none focus:outline-none ${wordWrap ? "!whitespace-pre-wrap !break-words" : "!whitespace-pre"
                 }`}
             >
-              <code ref={codeRef} className="language-html">
+              <code ref={codeRef} className="language-html outline-none !outline-none focus:outline-none">
                 {code}
               </code>
             </pre>

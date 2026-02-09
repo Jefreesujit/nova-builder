@@ -32,7 +32,7 @@ export function NewProjectForm({ onSubmit }: NewProjectFormProps) {
         <textarea
           name="prompt"
           placeholder="E.g., Create a modern landing page for an AI startup with hero section, features, and pricing..."
-          className="w-full h-32 p-4 bg-card border border-border rounded-xl text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+          className="w-full h-32 p-4 bg-card border border-border rounded-xl text-foreground placeholder:text-muted focus:outline-none focus:border-primary/50 resize-none transition-colors"
           required
           disabled={isLoading}
         />

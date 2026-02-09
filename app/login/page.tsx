@@ -19,7 +19,7 @@ export default function LoginPage() {
 
         <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
           <button
-            onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+            onClick={() => signIn("google", { callbackUrl: "/" })}
             className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white text-slate-900 font-medium rounded-xl hover:bg-slate-100 transition-colors"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -44,7 +44,7 @@ export default function LoginPage() {
           </button>
 
           <button
-            onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
+            onClick={() => signIn("github", { callbackUrl: "/" })}
             className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-border text-foreground font-medium rounded-xl hover:bg-border/80 transition-colors"
           >
             <Github className="w-5 h-5" />
@@ -67,7 +67,7 @@ export default function LoginPage() {
               await signIn("credentials", {
                 email: formData.get("email"),
                 password: formData.get("password"),
-                callbackUrl: "/dashboard",
+                callbackUrl: "/",
               });
             }}
             className="space-y-3"
@@ -77,7 +77,7 @@ export default function LoginPage() {
                 name="email"
                 type="email"
                 placeholder="admin@novabuilder.com"
-                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors"
                 required
               />
             </div>
@@ -86,7 +86,7 @@ export default function LoginPage() {
                 name="password"
                 type="password"
                 placeholder="Admin@123"
-                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors"
                 required
               />
             </div>

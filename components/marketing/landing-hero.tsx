@@ -18,23 +18,34 @@ const SUGGESTIONS = [
   "A simple todo app with drag and drop",
 ];
 
-export function LandingHero() {
+
+interface LandingHeroProps {
+  user?: {
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  };
+}
+
+export function LandingHero({ user }: LandingHeroProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: session } = useSession();
+  const { data: session } = useSession(); // Keep this for redirect logic if needed, or rely on user prop
+  const currentUser = user || session?.user;
+
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   // Auto-trigger if redirected back from login with a prompt
   useEffect(() => {
     const prompt = searchParams.get("prompt");
-    if (prompt && session && !isRedirecting) {
+    if (prompt && currentUser && !isRedirecting) {
       handleStartBuilding(prompt);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session, searchParams]);
+  }, [currentUser, searchParams]);
 
   const handleStartBuilding = async (text: string, attachments: Attachment[] = [], model?: string) => {
-    if (!session) {
+    if (!currentUser) {
       router.push(`/login?callbackUrl=${encodeURIComponent(`/?prompt=${encodeURIComponent(text)}`)}`);
       return;
     }
@@ -54,7 +65,7 @@ export function LandingHero() {
   };
 
   return (
-    <div className="relative min-h-[90vh] flex flex-col items-center justify-center px-4 pt-20 overflow-hidden">
+    <div className="relative min-h-screen flex flex-col items-center justify-center px-4 pt-20 overflow-hidden">
       {/* Background Mesh Gradient */}
       <div className="absolute inset-0 z-0">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px] animate-pulse"></div>
@@ -83,14 +94,29 @@ export function LandingHero() {
 
         {/* Heading */}
         <div className="space-y-4 animate-in fade-in slide-in-from-top-6 duration-700 delay-100">
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.1]">
-            Turn your ideas into
-            <span className="block bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-gradient-x">
-              shippable apps
-            </span>
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.1]">
+            {currentUser ? (
+              <>
+                <span className="block text-2xl md:text-3xl font-bold text-muted-foreground mb-2 text-left md:text-center w-full">
+                  Welcome back, <span className="text-primary">{currentUser.name?.split(' ')[0]}</span>
+                </span>
+                <span className="block bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
+                  What are we building today?
+                </span>
+              </>
+            ) : (
+              <>
+                Turn your ideas into
+                <span className="block bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-gradient-x">
+                  shippable apps
+                </span>
+              </>
+            )}
           </h1>
-          <p className="text-lg md:text-xl text-muted max-w-2xl mx-auto leading-relaxed">
-            NovaBuilder is the open-source engine that transforms your natural language prompts into stunning, high-performance web applications instantly.
+          <p className="text-lg text-muted max-w-2xl mx-auto leading-relaxed">
+            {currentUser
+              ? "Your personal AI coding companion is ready. Describe your idea below and watch it come to life instantly."
+              : "NovaBuilder is the open-source engine that transforms your natural language prompts into stunning, high-performance web applications instantly."}
           </p>
         </div>
 
@@ -117,18 +143,6 @@ export function LandingHero() {
           </div>
         </div>
 
-        {/* Links */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
-          <a
-            href="https://github.com/JefreeSujit/nova-builder"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 px-6 py-2.5 bg-card/50 border border-border/50 text-sm font-medium rounded-xl hover:bg-card transition-all hover:border-border"
-          >
-            <Github size={18} />
-            Star on GitHub
-          </a>
-        </div>
       </div>
     </div>
   );
