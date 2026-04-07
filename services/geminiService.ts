@@ -1,162 +1,121 @@
-import { GoogleGenAI } from "@google/genai";
-import { Message, Attachment } from '../types';
+import type { Message, Attachment } from '@/lib/types/database';
 
-// Initialize Gemini Client
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+export interface GenerateResult {
+  code: string;
+  summary: string;
+  projectName?: string;
+}
 
-const SYSTEM_INSTRUCTION = `
-You are Nova, an expert Full Stack Developer and UI/UX Designer specialized in building Landing Pages and Single Page Applications.
-
-YOUR GOAL:
-Generate a SINGLE, STANDALONE HTML file that includes everything needed to run the page (HTML, internal CSS, and internal JavaScript).
-
-TECHNICAL CONSTRAINTS:
-1.  **Styling**: Use Tailwind CSS via CDN (<script src="https://cdn.tailwindcss.com"></script>). Do not write raw CSS unless absolutely necessary for animations not supported by Tailwind.
-2.  **Icons**: If icons are needed, use FontAwesome CDN or inline SVGs. Do not import React libraries like Lucide or Remix in the raw HTML output as it won't run in a simple iframe without a bundler.
-3.  **Images**: Use 'https://picsum.photos/width/height' for placeholders.
-4.  **Structure**: The output must be a valid HTML5 document starting with <!DOCTYPE html>.
-5.  **Interactivity**: Use vanilla JavaScript inside <script> tags for any interactivity (modals, smooth scroll, form handling simulation).
-6.  **Response Format**: You MUST return a JSON object with the following structure:
-    {
-      "html": "<!DOCTYPE html>...",
-      "summary": "A short, friendly summary of the changes you made.",
-      "projectName": "A short, catchy name for this project (1-3 words) based on the content."
-    }
-    DO NOT wrap the response in markdown code blocks. Return raw JSON.
-
-BEHAVIOR:
-- If the user asks to modify the existing app, look at the provided context (previous code) and apply the changes intelligently.
-- Make the design modern, responsive, and accessible. Use adequate padding, pleasant color palettes, and clear typography.
-- If the user asks for a specific functionality (like a contact form), implement the UI and a JavaScript handler that alerts the user (simulating a backend submission).
-`;
-
-export const generateAppCode = async (
-  prompt: string, 
-  history: Message[], 
+export const generateAppCode = async function* (
+  prompt: string,
+  history: Message[],
   currentCode: string,
   attachments: Attachment[] = []
-): Promise<{ code: string; summary: string; projectName?: string }> => {
+): AsyncGenerator<GenerateResult, void, unknown> {
   try {
-    // Using gemini-3-pro-preview as it is best suited for complex coding tasks
-    const model = 'gemini-3-pro-preview';
-    
-    // Construct a context-aware prompt
-    let contextPrompt = `
-      CURRENT CODE STATE:
-      ${currentCode}
-
-      USER REQUEST:
-      ${prompt}
-    `;
-
-    // Process attachments for the current request
-    const currentParts: any[] = [];
-    
-    // 1. Add embedded text files to the prompt (better for code context)
-    const textAttachments = attachments.filter(a => a.isText);
-    if (textAttachments.length > 0) {
-        contextPrompt += `\n\nATTACHED FILES CONTEXT:\n`;
-        textAttachments.forEach(att => {
-            contextPrompt += `\n--- START OF FILE ${att.name} ---\n${att.content}\n--- END OF FILE ---\n`;
-        });
-    }
-
-    // 2. Add the text prompt part
-    currentParts.push({ text: `
-      INSTRUCTIONS:
-      Based on the CURRENT CODE STATE, USER REQUEST, and any ATTACHED FILES, generate the updated full HTML file. 
-      If the user wants to completely change the app, ignore the current code.
-      Ensure the new code is complete and functional.
-      Return the response in JSON format with "html", "summary", and "projectName" fields.
-      
-      ${contextPrompt}
-    `});
-
-    // 3. Add binary attachments (PDFs) as inlineData
-    const binaryAttachments = attachments.filter(a => !a.isText);
-    binaryAttachments.forEach(att => {
-        // Remove data URL prefix if present (e.g., "data:application/pdf;base64,")
-        const base64Data = att.content.split(',')[1] || att.content;
-        currentParts.push({
-            inlineData: {
-                mimeType: att.mimeType,
-                data: base64Data
-            }
-        });
+    console.log("[GeminiService] Fetching /api/generate...");
+    const response = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, history, currentCode, attachments }),
     });
 
-    // Process History
-    const historyContents = history.map(msg => {
-        const parts: any[] = [{ text: msg.content }];
-        
-        // Handle historical attachments
-        if (msg.attachments && msg.attachments.length > 0) {
-            // Add text attachments to the content string for history
-            const histTextAtts = msg.attachments.filter(a => a.isText);
-            if (histTextAtts.length > 0) {
-                 let attachmentText = "\n[Attached Files in this message]:";
-                 histTextAtts.forEach(att => {
-                     attachmentText += `\nFile: ${att.name}\n${att.content}`;
-                 });
-                 parts[0].text += attachmentText;
-            }
-
-            // Add binary attachments as parts
-            const histBinAtts = msg.attachments.filter(a => !a.isText);
-            histBinAtts.forEach(att => {
-                const base64Data = att.content.split(',')[1] || att.content;
-                parts.push({
-                    inlineData: {
-                        mimeType: att.mimeType,
-                        data: base64Data
-                    }
-                });
-            });
-        }
-        
-        return {
-            role: msg.role,
-            parts: parts
-        };
-    });
-
-    const response = await ai.models.generateContent({
-      model: model,
-      contents: [
-        ...historyContents,
-        { role: 'user', parts: currentParts }
-      ],
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        temperature: 0.7,
-        responseMimeType: 'application/json'
+    if (!response.ok) {
+      let errMessage = `Server error ${response.status}`;
+      try {
+        const errJson = await response.json();
+        errMessage = errJson.error || errMessage;
+      } catch {
+        try { errMessage = await response.text(); } catch { }
       }
-    });
-
-    const responseText = response.text || '{}';
-    let parsedResponse;
-    
-    try {
-        parsedResponse = JSON.parse(responseText);
-    } catch (e) {
-        // Fallback cleanup if model outputs markdown despite JSON instruction
-        const cleanedText = responseText.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/```$/, '');
-        try {
-            parsedResponse = JSON.parse(cleanedText);
-        } catch (e2) {
-            console.error("Failed to parse Gemini response as JSON", responseText);
-            throw new Error("Invalid response format from AI");
-        }
+      console.error("[GeminiService] API Error:", errMessage);
+      throw new Error(errMessage);
     }
 
-    return {
-        code: parsedResponse.html || currentCode,
-        summary: parsedResponse.summary || "I've updated the app based on your request.",
-        projectName: parsedResponse.projectName
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error("Connection failed: No response body.");
+
+    const decoder = new TextDecoder();
+    let accumulatedBuffer = '';
+
+    // State to accumulate parts
+    let accumulatedSummary = '';
+    let accumulatedProjectName = '';
+    let accumulatedHtml = '';
+
+    const markers = {
+      SUMMARY: "### SUMMARY ###",
+      PROJECT_NAME: "### PROJECT_NAME ###",
+      HTML: "### HTML ###",
+      ERROR: "### ERROR ###"
     };
 
-  } catch (error) {
-    console.error("Gemini Generation Error:", error);
-    throw new Error("Failed to generate code. Please try again.");
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      accumulatedBuffer += decoder.decode(value, { stream: true });
+
+      // Check for ERROR marker
+      if (accumulatedBuffer.includes(markers.ERROR)) {
+        const errorContent = accumulatedBuffer.split(markers.ERROR)[1];
+        throw new Error(errorContent || "AI Generation failed.");
+      }
+
+      let summaryStart = accumulatedBuffer.indexOf(markers.SUMMARY);
+      let projectNameStart = accumulatedBuffer.indexOf(markers.PROJECT_NAME);
+      let htmlStart = accumulatedBuffer.indexOf(markers.HTML);
+
+      // FALLBACK: If AI is just outputting raw HTML or text without markers
+      // If we have > 100 chars and NO summary marker found yet, assume it's just HTML or summary
+      if (summaryStart === -1 && projectNameStart === -1 && htmlStart === -1 && accumulatedBuffer.length > 200) {
+        // Check if it looks like HTML
+        if (accumulatedBuffer.trim().toLowerCase().startsWith("<!doctype") || accumulatedBuffer.includes("<html")) {
+          accumulatedHtml = accumulatedBuffer;
+          accumulatedSummary = "Generating HTML directly...";
+        } else {
+          accumulatedSummary = accumulatedBuffer;
+        }
+      } else {
+        // NORMAL PARSING BASED ON MARKERS
+        if (summaryStart !== -1) {
+          const start = summaryStart + markers.SUMMARY.length;
+          const end = projectNameStart !== -1 ? projectNameStart : (htmlStart !== -1 ? htmlStart : accumulatedBuffer.length);
+          accumulatedSummary = accumulatedBuffer.substring(start, end).trim();
+        }
+
+        if (projectNameStart !== -1) {
+          const start = projectNameStart + markers.PROJECT_NAME.length;
+          const end = htmlStart !== -1 ? htmlStart : accumulatedBuffer.length;
+          accumulatedProjectName = accumulatedBuffer.substring(start, end).trim();
+        }
+
+        if (htmlStart !== -1) {
+          const start = htmlStart + markers.HTML.length;
+          accumulatedHtml = accumulatedBuffer.substring(start).trim();
+        }
+      }
+
+      // Determine what to show in the code view
+      let codeToYield = accumulatedHtml;
+      if (!codeToYield) {
+        if (accumulatedProjectName) codeToYield = `<!-- Building project: ${accumulatedProjectName} ... -->`;
+        else if (accumulatedSummary) codeToYield = `<!-- ${accumulatedSummary.split('\n')[0]} ... -->`;
+        else codeToYield = `<!-- Thinking... -->`;
+      }
+
+      // Emit update
+      yield {
+        code: codeToYield,
+        summary: accumulatedSummary || "Thinking...",
+        projectName: accumulatedProjectName
+      };
+    }
+
+    console.log("[GeminiService] Generator finished successfully.");
+
+  } catch (error: any) {
+    console.error("[GeminiService] Streaming error:", error);
+    throw error;
   }
 };
