@@ -1,0 +1,28 @@
+- Fix outline for textarea
+- Model selector to use gemini 3 flash and pro
+- Model selector for free user to use fast / advanced mode
+- Ability to debug and retry (button) if any error in generated code
+- Improvise hero section
+- Fix test email authentication (see how email auth works)
+- Setup gmail and github authentication
+- App Rebranding
+- Font size fix for side chat textarea input
+- Ability to revert to a previous change
+- Remove github icon on top right in project view (only shown in landing page)
+- Fix the height in hero section, move content slightly top and add some spacing between the text and the input prompt
+- Fix the font size on hero section (reduce), move the welcome to top left and the remaining message slightly smaller
+- App when authenticated shoudnt have landing page elements. If unauthenticated, have landing page. If authenticated, show the list of projects in one tab and community projects in other tab
+- Improvise settings page, add more controls, email, social account link/delink, delete etc.
+- Github integration, push to github repo
+- Show "Star on Github" button on top right instead of that octocat icon
+- Dark theme / light theme switcher
+- Add the project management UI in the project details view
+  - Ability to rename project
+  - Project settings
+- Show intermediate steps during generation
+- Deploy and publish toggle (should turn to publish)
+- Maintain published changes and draft version separately (backend support)
+- Improvise footer section
+- Use Vercel AI SDK for allowing users to support whatever models and their api keys
+- custom domain support for apps and websites
+- SEO for generated sites
